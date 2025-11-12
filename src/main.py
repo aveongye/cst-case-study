@@ -43,20 +43,23 @@ def _write_outputs(result: CaseStudyResult, output_dir: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the CST case study analytics pipeline.")
     parser.add_argument(
-        "-f",
         "--file",
         default="CST_Case_Study_data__1_.xlsx",
         help="Path to the Excel workbook containing the case study data.",
     )
     parser.add_argument(
-        "-o",
         "--output-dir",
         default="outputs",
         help="Directory where CSV outputs will be written.",
     )
+    parser.add_argument(
+        "--fund",
+        default="Fund I",
+        help="Name of the fund to analyse (default: Fund I).",
+    )
     args = parser.parse_args()
 
-    result = run_case_study(file_path=args.file)
+    result = run_case_study(file_path=args.file, fund_name=args.fund)
     _write_outputs(result, Path(args.output_dir))
 
 

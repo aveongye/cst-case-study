@@ -41,8 +41,9 @@ The pipeline is modular, with clear separation between data handling, validation
    ```
    Arguments:
 
-- `-f, --file`: Path to the Excel workbook (default: `CST_Case_Study_data__1_.xlsx`)
-- `-o, --output-dir`: Output directory for CSVs (default: `outputs`)
+- `--file`: Path to the Excel workbook (default: `CST_Case_Study_data__1_.xlsx`)
+- `--output-dir`: Output directory for CSVs (default: `outputs`)
+- `--fund`: Name of the fund to analyse (default: `Fund I`)
 
 ## Outputs
 
