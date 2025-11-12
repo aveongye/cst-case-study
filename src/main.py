@@ -17,16 +17,25 @@ def _write_outputs(result: CaseStudyResult, output_dir: Path) -> None:
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    currency_irrs_df = pd.DataFrame(
-        [{"Currency": currency, "IRR": irr} for currency, irr in sorted(result.currency_irrs.items())]
+    currency_irrs_df = (
+        pd.DataFrame(result.currency_irrs.items(), columns=["Currency", "IRR"])
+        .sort_values("Currency")
     )
+    currency_irrs_df["IRR"] = currency_irrs_df["IRR"].apply(lambda x: f"{x * 100:.3f}%")
     currency_irrs_df.to_csv(output_dir / "currency_irrs.csv", index=False)
 
-    fund_irr_df = pd.DataFrame([{"Fund_Name": result.fund_name, "IRR": result.fund_irr}])
+    fund_irr_df = pd.DataFrame(
+        [(result.fund_name, f"{result.fund_irr * 100:.3f}%")],
+        columns=["Fund_Name", "IRR"],
+    )
     fund_irr_df.to_csv(output_dir / "fund_irr.csv", index=False)
 
     for currency, schedule in result.nav_schedules.items():
-        schedule.to_csv(output_dir / f"nav_schedule_{currency}.csv", index=False)
+        schedule.to_csv(
+            output_dir / f"nav_schedule_{currency}.csv",
+            index=False,
+            float_format="%.2f",
+        )
 
     result.fx_trades.to_csv(output_dir / "fx_forward_trades.csv", index=False)
 
