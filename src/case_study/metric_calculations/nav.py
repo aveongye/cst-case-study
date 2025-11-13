@@ -37,8 +37,6 @@ def calculate_net_asset_value(curr_df: pd.DataFrame) -> float:
     """
 
     assets_on_date = curr_df[curr_df["Cashflow_Amount_Local"] > 0]
-    if receivable_cf.empty:
-        return 0.0
     return float(assets_on_date["Cashflow_Amount_Local"].sum())
 
 
