@@ -17,32 +17,29 @@ def calculate_net_asset_present_value(
     irr: float,
 ) -> float:
     """
-    Present value of future cashflows beyond the target date.
+    Net Asset Value, time adjusted.
     """
 
-    future_cf = curr_df[curr_df["Date"] > target_date]
-    if future_cf.empty:
-        return 0.0
+    assets_on_date = curr_df[
+        (curr_df["Date"] >= target_date) & (curr_df["Cashflow_Amount_Local"] > 0)
+    ]
 
     present_value = 0.0
-    for _, row in future_cf.iterrows():
+    for _, row in assets_on_date.iterrows():
         days_diff = (row["Date"] - target_date).days
         discount_factor = (1 + irr) ** (days_diff / DAYS_IN_YEAR)
         present_value += row["Cashflow_Amount_Local"] / discount_factor
     return present_value
 
-def calculate_net_asset_value(
-    curr_df: pd.DataFrame,
-    target_date: datetime,
-) -> float:
+def calculate_net_asset_value(curr_df: pd.DataFrame) -> float:
     """
-    Value of future cashflows (principal + interest) beyond the target date, without discounting.
+    Net Asset Value
     """
 
-    future_cf = curr_df[curr_df["Date"] > target_date]
-    if future_cf.empty:
+    assets_on_date = curr_df[curr_df["Cashflow_Amount_Local"] > 0]
+    if receivable_cf.empty:
         return 0.0
-    return float(future_cf["Cashflow_Amount_Local"].sum())
+    return float(assets_on_date["Cashflow_Amount_Local"].sum())
 
 
 def generate_nav_schedule(
@@ -63,7 +60,7 @@ def generate_nav_schedule(
             cashflow_amount = rows_on_date["Cashflow_Amount_Local"].sum()
 
             nav_present_value = calculate_net_asset_present_value(sorted_df, current_date, irr)
-            nav_value = calculate_net_asset_value(sorted_df, current_date)
+            nav_value = calculate_net_asset_value(sorted_df)
 
             schedule_rows.append(
                 {
