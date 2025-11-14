@@ -56,9 +56,20 @@ Running the command generates the following CSV files:
 
 ## Notes on methodology
 
+**NAV Schedule**
+
+NAV = Net Asset Value = Fund Assets - Fund Liabilities
+
+The NAV schedule is a quarter-by-quarter timeline showing the current value of each investment in its local currency (GBP, EUR, or USD). These are the 2 important columns:
+
+- `Net_Asset_Value_Local`: Total value of assets
+- `Net_Asset_Present_Value_Local`: Total value of assets, time adjusted, to represent Present Value
+
 **Proposed Hedge Strategy**
 
-- Instrument: Foreign Currency / EUR forward
+Fund I's GBP and USD investments are exposed to currency risk against the base EUR, as FX fluctuations can erode the EUR-equivalent value of these assets. To mitigate this, the strategy employs a 3-month rolling fair value hedge using FX forward contracts on GBP/EUR and USD/EUR pairs.
+
+- Instrument: Foreign Currency / EUR Forwards
 - Direction: Sell Foreign Currency / Buy EUR (locks in EUR value against Foreign Currency depreciation risks)
 - Notional Basis: Foreign Currency Net Asset Present Value
 - Hedge Ratio: 100% of outstanding NAV exposure

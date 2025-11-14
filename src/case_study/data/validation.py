@@ -21,8 +21,8 @@ def validate_records(rows: Iterable[dict]) -> list[CashflowRecord]:
     for row in rows:
         try:
             records.append(CashflowRecord.model_validate(row))
-        except ValidationError as exc:  # pragma: no cover - passthrough to caller
-            raise ValidationError(  # type: ignore[call-arg]
+        except ValidationError as exc:  
+            raise ValidationError( 
                 errors=exc.errors(include_context=True),
                 model=CashflowRecord,
             ) from exc

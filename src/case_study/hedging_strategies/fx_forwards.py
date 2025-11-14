@@ -27,8 +27,6 @@ class ForwardTrade:
 
 
 def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
-    nav_df = nav_df.copy()
-    nav_df["Date"] = pd.to_datetime(nav_df["Date"])
     row = nav_df[nav_df["Date"] == current_date]
     if row.empty:
         raise ValueError(f"No NAV data available on {current_date}.")
@@ -37,7 +35,6 @@ def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
 
 def propose_fx_trades(
     nav_schedules: dict[str, pd.DataFrame],
-    currency_irrs: dict[str, float],  # kept for API compatibility
     currencies_to_hedge: Iterable[str] = DEFAULT_CURRENCIES,
     start_date: datetime = DEFAULT_START_DATE,
     end_date: datetime = DEFAULT_END_DATE,
@@ -50,8 +47,7 @@ def propose_fx_trades(
     for currency in currencies_to_hedge:
         if currency not in nav_schedules:
             raise ValueError(f"NAV schedule for currency '{currency}' not available.")
-        nav_df = nav_schedules[currency].copy()
-        nav_df["Date"] = pd.to_datetime(nav_df["Date"])
+        nav_df = nav_schedules[currency]
         nav_dates = [d for d in nav_df["Date"].sort_values() if start_date <= d <= end_date]
         if not nav_dates:
             continue

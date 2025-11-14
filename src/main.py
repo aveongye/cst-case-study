@@ -37,7 +37,9 @@ def _write_outputs(result: CaseStudyResult, output_dir: Path) -> None:
             float_format="%.2f",
         )
 
-    result.fx_trades.to_csv(output_dir / "fx_forward_trades.csv", index=False)
+    result.fx_trades.to_csv(
+        output_dir / "fx_forward_trades.csv", index=False, float_format="%.2f"
+    )
 
 
 def main() -> None:

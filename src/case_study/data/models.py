@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 class CashflowRecord(BaseModel):
     """
-    Normalized representation of a single cashflow entry.
+    Representation of a single cashflow entry.
     """
 
     ID: int
