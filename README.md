@@ -76,3 +76,9 @@ Fund I's GBP and USD investments are exposed to currency risk against the base E
 - Tenor: 3 months, rolled on each delivery date from NAV schedule
 - Settlement: Net cash-settled; Offsets FX mark-to-market on fund's NAV
 - Hedge Type: Fair value hedge (protects balance-sheet value rather than only cashflows)
+
+## Testing
+
+```bash
+python3 -m pytest tests
+```

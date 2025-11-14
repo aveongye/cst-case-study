@@ -29,7 +29,7 @@ class CaseStudyResult:
 
 def run_case_study(
     file_path: Path | str,
-    fund_name: str = "Fund I",
+    fund_name: str,
 ) -> CaseStudyResult:
     """
     Execute the end-to-end case study flow.
@@ -41,7 +41,7 @@ def run_case_study(
     currency_irrs = calculate_currency_irrs(fund_df)
     fund_irr = calculate_fund_irr(fund_df)
     nav_schedules = generate_nav_schedule(fund_df, currency_irrs)
-    fx_trades = propose_fx_trades(nav_schedules)
+    fx_trades = propose_fx_trades(nav_schedules, fund_df)
     return CaseStudyResult(
         fund_name=fund_name,
         currency_irrs=currency_irrs,

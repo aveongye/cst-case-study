@@ -3,3 +3,4 @@ openpyxl>=3.1
 pandas>=2.2
 python-dateutil>=2.9
 xirr>=1.2
+pytest>=7.0

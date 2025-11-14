@@ -11,10 +11,6 @@ from typing import Iterable
 import pandas as pd
 from dateutil.relativedelta import relativedelta
 
-DEFAULT_START_DATE = datetime(2025, 9, 30)
-DEFAULT_END_DATE = datetime(2030, 9, 30)
-DEFAULT_CURRENCIES = ("GBP", "USD")
-
 
 @dataclass
 class ForwardTrade:
@@ -35,13 +31,22 @@ def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
 
 def propose_fx_trades(
     nav_schedules: dict[str, pd.DataFrame],
-    currencies_to_hedge: Iterable[str] = DEFAULT_CURRENCIES,
-    start_date: datetime = DEFAULT_START_DATE,
-    end_date: datetime = DEFAULT_END_DATE,
+    fund_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """
     Propose FX forward hedges aligned with NAV schedule dates.
     """
+    base_currency = fund_df["Base_Currency"].iloc[0]
+    
+    all_dates = []
+    for nav_df in nav_schedules.values():
+        all_dates.extend(nav_df["Date"].tolist())
+    if not all_dates:
+        return pd.DataFrame()
+    start_date = min(all_dates)
+    end_date = max(all_dates)
+    
+    currencies_to_hedge = [c for c in nav_schedules.keys() if c != base_currency]
 
     trades: list[ForwardTrade] = []
     for currency in currencies_to_hedge:
@@ -63,7 +68,7 @@ def propose_fx_trades(
 
             trades.append(
                 ForwardTrade(
-                    currency_pair=f"{currency}/EUR",
+                    currency_pair=f"{currency}/{base_currency}",
                     trade_date=trade_date,
                     delivery_date=delivery_date,
                     direction="Sell",
