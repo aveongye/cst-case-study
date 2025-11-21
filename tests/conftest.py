@@ -59,7 +59,7 @@ def sample_nav_schedule():
     return pd.DataFrame(
         {
             "Date": [datetime(2025, 9, 30), datetime(2025, 12, 31), datetime(2026, 3, 31)],
-            "Net_Asset_Present_Value_Local": [100.0, 102.5, 105.0],
+            "Net_Asset_Value_Local": [100.0, 102.5, 105.0],
         }
     )
 

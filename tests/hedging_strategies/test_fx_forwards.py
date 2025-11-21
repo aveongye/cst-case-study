@@ -52,12 +52,12 @@ def test_propose_fx_trades_missing_currency(sample_nav_schedule):
 
 
 def test_propose_fx_trades_zero_notional_skipped():
-    """Test that trades with zero notional are skipped."""
+    """Test that trades with zero or negative notional are skipped."""
     nav_schedules = {
         "GBP": pd.DataFrame(
             {
-                "Date": [datetime(2025, 9, 30)],
-                "Net_Asset_Present_Value_Local": [0.0],
+                "Date": [datetime(2025, 9, 30), datetime(2025, 12, 31)],
+                "Net_Asset_Value_Local": [0.0, -100000.0],
             }
         )
     }

@@ -60,10 +60,9 @@ Running the command generates the following CSV files:
 
 NAV = Net Asset Value = Fund Assets - Fund Liabilities
 
-The NAV schedule is a quarter-by-quarter timeline showing the current value of each investment in its local currency (GBP, EUR, or USD). These are the 2 important columns:
+The NAV schedule is a quarter-by-quarter timeline showing the current value of each investment in its local currency (GBP, EUR, or USD).
 
-- `Net_Asset_Value_Local`: Total value of assets
-- `Net_Asset_Present_Value_Local`: Total value of assets, time adjusted, to represent Present Value
+`Net_Asset_Value_Local`: Net Asset Value (present value of all remaining cashflows)
 
 **Proposed Hedge Strategy**
 

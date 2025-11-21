@@ -26,7 +26,7 @@ def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
     row = nav_df[nav_df["Date"] == current_date]
     if row.empty:
         raise ValueError(f"No NAV data available on {current_date}.")
-    return float(row["Net_Asset_Present_Value_Local"].iloc[0])
+    return float(row["Net_Asset_Value_Local"].iloc[0])
 
 
 def propose_fx_trades(
@@ -59,7 +59,10 @@ def propose_fx_trades(
 
         for idx, trade_date in enumerate(nav_dates):
             notional_amount = _nav_value_on_date(nav_df, trade_date)
-            if notional_amount == 0:
+            # Skip trades with zero or negative NAV (no positive exposure to hedge)
+            # Use a small threshold (0.01) to handle floating point precision issues
+            # and to skip trades with negligible exposure
+            if notional_amount <= 0 or abs(notional_amount) < 0.01:
                 continue
             if idx + 1 < len(nav_dates):
                 delivery_date = nav_dates[idx + 1]
