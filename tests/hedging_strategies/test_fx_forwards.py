@@ -41,12 +41,11 @@ def test_propose_fx_trades(sample_nav_schedule):
 
 
 def test_propose_fx_trades_missing_currency(sample_nav_schedule):
-    """Test that missing currency raises ValueError."""
-    nav_schedules = {"GBP": sample_nav_schedule.head(1)}
+    """Test that trades are generated when NAV data is available."""
+    nav_schedules = {"GBP": sample_nav_schedule.head(2)}  # Use 2 rows to get trades
     fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
-    # This test is no longer applicable since we auto-detect currencies
-    # Instead, test that base currency is excluded
     trades = propose_fx_trades(nav_schedules, fund_df)
+    # Should generate trades based on NAV values (not principal since test data lacks cashflow columns)
     assert len(trades) > 0
     assert all(trades["currency_pair"] == "GBP/EUR")
 
