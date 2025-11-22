@@ -29,18 +29,6 @@ def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
     return float(row["Net_Asset_Value_Local"].iloc[0])
 
 
-def _get_principal_amount(fund_df: pd.DataFrame, currency: str) -> float:
-    """Get the principal investment amount for a currency."""
-    # Check if fund_df has the required columns (for real data)
-    if "Local_Currency" in fund_df.columns and "Cashflow_Type" in fund_df.columns:
-        curr_df = fund_df[fund_df["Local_Currency"] == currency]
-        investment = curr_df[curr_df["Cashflow_Type"] == "Investment"]["Cashflow_Amount_Local"].sum()
-        return abs(investment)  # Convert negative investment to positive principal
-    else:
-        # Fallback for test data - return 0 (will be skipped by the threshold check)
-        return 0.0
-
-
 def propose_fx_trades(
     nav_schedules: dict[str, pd.DataFrame],
     fund_df: pd.DataFrame,
@@ -70,20 +58,22 @@ def propose_fx_trades(
             continue
 
         for idx, trade_date in enumerate(nav_dates):
-            # Special handling for the first date (investment date)
-            # Use principal amount instead of NAV since NAV = 0 at t=0
-            if idx == 0:
-                notional_amount = _get_principal_amount(fund_df, currency)
+            # Determine delivery date (next NAV date)
+            if idx + 1 < len(nav_dates):
+                delivery_date = nav_dates[idx + 1]
             else:
-                notional_amount = _nav_value_on_date(nav_df, trade_date)
+                # Last trade: skip if it would create same-day forward
+                # The final cashflow (principal repayment) ends the exposure,
+                # so no forward hedge is needed beyond this date
+                continue
+            
+            # Hedge based on NAV at delivery date (the exposure we're protecting)
+            # This ensures perfect hedge coverage when the forward delivers
+            notional_amount = _nav_value_on_date(nav_df, delivery_date)
             
             # Skip trades with zero or negative exposure
             if notional_amount <= 0 or abs(notional_amount) < 0.01:
                 continue
-            if idx + 1 < len(nav_dates):
-                delivery_date = nav_dates[idx + 1]
-            else:
-                delivery_date = min(trade_date + relativedelta(months=3), end_date)
 
             trades.append(
                 ForwardTrade(

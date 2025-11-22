@@ -28,7 +28,7 @@ def test_nav_value_on_date_not_found(sample_nav_schedule):
 
 def test_propose_fx_trades(sample_nav_schedule):
     """Test FX trade proposal generation."""
-    nav_schedules = {"GBP": sample_nav_schedule.head(2)}  # Use first 2 rows
+    nav_schedules = {"GBP": sample_nav_schedule} 
     fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
 
     trades = propose_fx_trades(nav_schedules, fund_df)
@@ -42,7 +42,7 @@ def test_propose_fx_trades(sample_nav_schedule):
 
 def test_propose_fx_trades_missing_currency(sample_nav_schedule):
     """Test that trades are generated when NAV data is available."""
-    nav_schedules = {"GBP": sample_nav_schedule.head(2)}  # Use 2 rows to get trades
+    nav_schedules = {"GBP": sample_nav_schedule} 
     fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
     trades = propose_fx_trades(nav_schedules, fund_df)
     # Should generate trades based on NAV values (not principal since test data lacks cashflow columns)
@@ -67,7 +67,7 @@ def test_propose_fx_trades_zero_notional_skipped():
 
 def test_propose_fx_trades_auto_excludes_base_currency(sample_nav_schedule):
     """Test that base currency is automatically excluded from hedging."""
-    nav_schedules = {"GBP": sample_nav_schedule.head(2), "EUR": sample_nav_schedule.head(2)}
+    nav_schedules = {"GBP": sample_nav_schedule, "EUR": sample_nav_schedule}
     fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
     trades = propose_fx_trades(nav_schedules, fund_df)
     # Should only hedge GBP, not EUR
@@ -78,7 +78,7 @@ def test_propose_fx_trades_auto_excludes_base_currency(sample_nav_schedule):
 
 def test_propose_fx_trades_custom_base_currency(sample_nav_schedule):
     """Test that custom base currency works correctly."""
-    nav_schedules = {"GBP": sample_nav_schedule.head(2), "USD": sample_nav_schedule.head(2)}
+    nav_schedules = {"GBP": sample_nav_schedule, "USD": sample_nav_schedule}
     fund_df = pd.DataFrame({"Base_Currency": ["USD"]})
     trades = propose_fx_trades(nav_schedules, fund_df)
     # Should hedge GBP against USD, not USD against itself
