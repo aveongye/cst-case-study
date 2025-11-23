@@ -26,12 +26,10 @@ def test_nav_value_on_date_not_found(sample_nav_schedule):
         _nav_value_on_date(nav_df, datetime(2025, 12, 31))
 
 
-def test_propose_fx_trades(sample_nav_schedule):
+def test_propose_fx_trades(sample_nav_schedule, sample_fund_df_multi_currency):
     """Test FX trade proposal generation."""
-    nav_schedules = {"GBP": sample_nav_schedule} 
-    fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
-
-    trades = propose_fx_trades(nav_schedules, fund_df)
+    nav_schedules = {"GBP": sample_nav_schedule}
+    trades = propose_fx_trades(nav_schedules, sample_fund_df_multi_currency)
 
     assert len(trades) > 0
     assert "currency_pair" in trades.columns
@@ -40,17 +38,15 @@ def test_propose_fx_trades(sample_nav_schedule):
     assert all(trades["direction"] == "Sell")
 
 
-def test_propose_fx_trades_missing_currency(sample_nav_schedule):
+def test_propose_fx_trades_missing_currency(sample_nav_schedule, sample_fund_df_multi_currency):
     """Test that trades are generated when NAV data is available."""
-    nav_schedules = {"GBP": sample_nav_schedule} 
-    fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
-    trades = propose_fx_trades(nav_schedules, fund_df)
-    # Should generate trades based on NAV values (not principal since test data lacks cashflow columns)
+    nav_schedules = {"GBP": sample_nav_schedule}
+    trades = propose_fx_trades(nav_schedules, sample_fund_df_multi_currency)
     assert len(trades) > 0
     assert all(trades["currency_pair"] == "GBP/EUR")
 
 
-def test_propose_fx_trades_zero_notional_skipped():
+def test_propose_fx_trades_zero_notional_skipped(sample_fund_df_multi_currency):
     """Test that trades with zero or negative notional are skipped."""
     nav_schedules = {
         "GBP": pd.DataFrame(
@@ -60,26 +56,31 @@ def test_propose_fx_trades_zero_notional_skipped():
             }
         )
     }
-    fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
+    # Create fund_df with zero cashflows for GBP
+    fund_df = sample_fund_df_multi_currency.copy()
+    fund_df.loc[fund_df["Local_Currency"] == "GBP", "Cashflow_Amount_Local"] = 0.0
     trades = propose_fx_trades(nav_schedules, fund_df)
+    # First trade: NAV = 0.0, cashflow = 0.0, post-transaction = 0.0 (skipped)
+    # Second trade would be on 2025-12-31 but NAV is -100k, so post-transaction = -100k (skipped)
     assert len(trades) == 0
 
 
-def test_propose_fx_trades_auto_excludes_base_currency(sample_nav_schedule):
+def test_propose_fx_trades_auto_excludes_base_currency(sample_nav_schedule, sample_fund_df_multi_currency):
     """Test that base currency is automatically excluded from hedging."""
     nav_schedules = {"GBP": sample_nav_schedule, "EUR": sample_nav_schedule}
-    fund_df = pd.DataFrame({"Base_Currency": ["EUR"]})
-    trades = propose_fx_trades(nav_schedules, fund_df)
+    trades = propose_fx_trades(nav_schedules, sample_fund_df_multi_currency)
     # Should only hedge GBP, not EUR
     assert len(trades) > 0
     assert all(trades["currency_pair"] == "GBP/EUR")
     assert "EUR/EUR" not in trades["currency_pair"].values
 
 
-def test_propose_fx_trades_custom_base_currency(sample_nav_schedule):
+def test_propose_fx_trades_custom_base_currency(sample_nav_schedule, sample_fund_df_multi_currency):
     """Test that custom base currency works correctly."""
     nav_schedules = {"GBP": sample_nav_schedule, "USD": sample_nav_schedule}
-    fund_df = pd.DataFrame({"Base_Currency": ["USD"]})
+    # Change base currency to USD
+    fund_df = sample_fund_df_multi_currency.copy()
+    fund_df["Base_Currency"] = "USD"
     trades = propose_fx_trades(nav_schedules, fund_df)
     # Should hedge GBP against USD, not USD against itself
     assert len(trades) > 0

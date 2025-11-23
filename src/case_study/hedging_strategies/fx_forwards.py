@@ -29,6 +29,14 @@ def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
     return float(row["Net_Asset_Value_Local"].iloc[0])
 
 
+def _get_cashflow_on_date(fund_df: pd.DataFrame, currency: str, date: datetime) -> float:
+    """
+    Get the cashflow amount on a specific date for a given currency.
+    """
+    curr_df = fund_df[fund_df["Local_Currency"] == currency]
+    date_cashflows = curr_df[curr_df["Date"] == date]
+    return float(date_cashflows["Cashflow_Amount_Local"].sum())
+
 def propose_fx_trades(
     nav_schedules: dict[str, pd.DataFrame],
     fund_df: pd.DataFrame,
@@ -67,9 +75,12 @@ def propose_fx_trades(
                 # so no forward hedge is needed beyond this date
                 continue
             
-            # Hedge based on NAV at delivery date (the exposure we're protecting)
-            # This ensures perfect hedge coverage when the forward delivers
-            notional_amount = _nav_value_on_date(nav_df, delivery_date)
+            # Hedge based on POST-TRANSACTION NAV at trade date
+            # This represents the exposure after cashflows on the trade date are received/paid
+            # Post-transaction NAV = Pre-transaction NAV - Cashflow on trade date
+            pre_transaction_nav = _nav_value_on_date(nav_df, trade_date)
+            cashflow_on_trade_date = _get_cashflow_on_date(fund_df, currency, trade_date)
+            notional_amount = pre_transaction_nav - cashflow_on_trade_date
             
             # Skip trades with zero or negative exposure
             if notional_amount <= 0 or abs(notional_amount) < 0.01:

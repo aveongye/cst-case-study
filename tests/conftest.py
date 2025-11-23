@@ -19,19 +19,23 @@ def sample_fund_df():
 
 @pytest.fixture
 def sample_fund_df_multi_currency():
+    """Fund DataFrame with GBP, USD, and EUR cashflows for multi-currency tests."""
     return pd.DataFrame(
         {
-            "Local_Currency": ["GBP", "GBP", "GBP", "USD", "USD", "USD"],
+            "Base_Currency": ["EUR", "EUR", "EUR", "EUR", "EUR", "EUR", "EUR"],
+            "Local_Currency": ["GBP", "GBP", "GBP", "USD", "USD", "USD", "EUR"],
             "Date": [
                 datetime(2025, 9, 30), datetime(2025, 12, 31), datetime(2026, 3, 31),
                 datetime(2025, 9, 30), datetime(2025, 12, 31), datetime(2026, 3, 31),
+                datetime(2025, 9, 30),
             ],
             "Cashflow_Type": [
                 "Investment", "Interest", "Principal Repayment",
                 "Investment", "Interest", "Principal Repayment",
+                "Investment",
             ],
-            "Cashflow_Amount_Local": [-100.0, 2.5, 100.0, -200.0, 5.0, 200.0],
-            "Cashflow_Amount_Base": [-114.0, 2.86, 114.0, -228.0, 5.72, 228.0],
+            "Cashflow_Amount_Local": [-100000000.0, 2500000.0, 100000000.0, -200000000.0, 6000000.0, 200000000.0, -50000000.0],
+            "Cashflow_Amount_Base": [-114.0, 2.86, 114.0, -228.0, 5.72, 228.0, -57.0],
         }
     )
 
