@@ -31,13 +31,14 @@ def calculate_irr(cashflows: Iterable[float], dates: Iterable[date | datetime]) 
 def calculate_currency_irrs(fund_df: pd.DataFrame) -> dict[str, float]:
     """
     Calculate IRR per currency in the provided fund dataframe.
+    
+    Args:
+        fund_df: DataFrame containing cashflow data with currency information (must be non-empty)
+                Required columns are validated by Pydantic in validate_cashflows()
+        
+    Returns:
+        Dictionary mapping currency codes to their IRRs
     """
-
-    required_columns = {"Local_Currency", "Date", "Cashflow_Amount_Local"}
-    missing = required_columns - set(fund_df.columns)
-    if missing:
-        raise ValueError(f"Missing required columns for IRR calculation: {missing}")
-
     irrs: dict[str, float] = {}
     for currency, curr_df in fund_df.groupby("Local_Currency"):
         sorted_df = curr_df.sort_values("Date")
@@ -50,13 +51,14 @@ def calculate_currency_irrs(fund_df: pd.DataFrame) -> dict[str, float]:
 def calculate_fund_irr(fund_df: pd.DataFrame) -> float:
     """
     Calculate the IRR of the fund in base currency.
+    
+    Args:
+        fund_df: DataFrame containing cashflow data in base currency (must be non-empty)
+                Required columns are validated by Pydantic in validate_cashflows()
+        
+    Returns:
+        Fund-level IRR as a float
     """
-
-    required_columns = {"Date", "Cashflow_Amount_Base"}
-    missing = required_columns - set(fund_df.columns)
-    if missing:
-        raise ValueError(f"Missing required columns for fund IRR calculation: {missing}")
-
     sorted_df = fund_df.sort_values("Date")
     return calculate_irr(sorted_df["Cashflow_Amount_Base"], sorted_df["Date"])
 

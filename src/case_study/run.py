@@ -33,8 +33,14 @@ def run_case_study(
 ) -> CaseStudyResult:
     """
     Execute the end-to-end case study flow.
+    
+    Args:
+        file_path: Path to the Excel file containing cashflow data
+        fund_name: Name of the fund to analyze
+        
+    Returns:
+        CaseStudyResult containing all calculated metrics and schedules
     """
-
     raw_df = read_excel(file_path)
     cashflows = validate_cashflows(raw_df)
     fund_df = filter_by_fund(cashflows, fund_name=fund_name)

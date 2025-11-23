@@ -47,13 +47,6 @@ def test_calculate_currency_irrs_multiple_currencies(sample_fund_df_multi_curren
     assert 0.0 < irrs["USD"] < 1.0
 
 
-def test_calculate_currency_irrs_missing_columns():
-    """Test missing columns raises error."""
-    df = pd.DataFrame({"Local_Currency": ["GBP"], "Date": [datetime(2025, 1, 1)]})
-    with pytest.raises(ValueError, match="Missing required columns"):
-        calculate_currency_irrs(df)
-
-
 def test_calculate_fund_irr(sample_fund_df):
     """Test fund IRR calculation."""
     irr = calculate_fund_irr(sample_fund_df)
@@ -61,9 +54,4 @@ def test_calculate_fund_irr(sample_fund_df):
     assert 0.0 < irr < 1.0
 
 
-def test_calculate_fund_irr_missing_columns():
-    """Test missing columns raises error."""
-    df = pd.DataFrame({"Date": [datetime(2025, 1, 1)]})
-    with pytest.raises(ValueError, match="Missing required columns"):
-        calculate_fund_irr(df)
 

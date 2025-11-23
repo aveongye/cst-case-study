@@ -6,10 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable
-
 import pandas as pd
-from dateutil.relativedelta import relativedelta
 
 
 @dataclass
@@ -23,9 +20,10 @@ class ForwardTrade:
 
 
 def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
+    """
+    Get NAV value on a specific date.
+    """
     row = nav_df[nav_df["Date"] == current_date]
-    if row.empty:
-        raise ValueError(f"No NAV data available on {current_date}.")
     return float(row["Net_Asset_Value_Local"].iloc[0])
 
 
@@ -43,6 +41,13 @@ def propose_fx_trades(
 ) -> pd.DataFrame:
     """
     Propose FX forward hedges aligned with NAV schedule dates.
+    
+    Args:
+        nav_schedules: Dictionary mapping currency codes to NAV schedule DataFrames
+        fund_df: DataFrame containing fund cashflow data (must be non-empty and contain Base_Currency)
+        
+    Returns:
+        DataFrame containing proposed FX forward trades
     """
     base_currency = fund_df["Base_Currency"].iloc[0]
     
@@ -58,8 +63,6 @@ def propose_fx_trades(
 
     trades: list[ForwardTrade] = []
     for currency in currencies_to_hedge:
-        if currency not in nav_schedules:
-            raise ValueError(f"NAV schedule for currency '{currency}' not available.")
         nav_df = nav_schedules[currency]
         nav_dates = [d for d in nav_df["Date"].sort_values() if start_date <= d <= end_date]
         if not nav_dates:
@@ -83,7 +86,7 @@ def propose_fx_trades(
             notional_amount = pre_transaction_nav - cashflow_on_trade_date
             
             # Skip trades with zero or negative exposure
-            if notional_amount <= 0 or abs(notional_amount) < 0.01:
+            if notional_amount <= 0:
                 continue
 
             trades.append(

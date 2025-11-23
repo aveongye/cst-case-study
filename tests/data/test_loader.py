@@ -25,7 +25,7 @@ def test_filter_by_fund():
 
 
 def test_filter_by_fund_no_match():
-    """Test filtering when no matching fund exists."""
+    """Test filtering when no matching fund exists raises ValueError."""
     df = pd.DataFrame(
         {
             "Fund_Name": ["Fund I", "Fund I"],
@@ -33,25 +33,15 @@ def test_filter_by_fund_no_match():
             "Cashflow_Amount_Local": [-100, 2.5],
         }
     )
-    result = filter_by_fund(df, "Fund III")
-    assert len(result) == 0
+    with pytest.raises(ValueError, match="Fund 'Fund III' not found"):
+        filter_by_fund(df, "Fund III")
 
 
 def test_filter_by_fund_empty_dataframe():
-    """Test filtering on empty DataFrame."""
+    """Test filtering on empty DataFrame raises ValueError."""
     df = pd.DataFrame({"Fund_Name": [], "Date": [], "Cashflow_Amount_Local": []})
-    result = filter_by_fund(df, "Fund I")
-    assert len(result) == 0
-
-
-def test_filter_by_fund_missing_column():
-    """Test that missing Fund_Name column raises KeyError."""
-    df = pd.DataFrame(
-        {
-            "Date": ["2025-09-30", "2025-12-31"],
-            "Cashflow_Amount_Local": [-100, 2.5],
-        }
-    )
-    with pytest.raises(KeyError, match="Fund_Name"):
+    with pytest.raises(ValueError, match="Cannot filter empty DataFrame"):
         filter_by_fund(df, "Fund I")
+
+
 

@@ -4,11 +4,12 @@ NAV related calculations for the CST case study analytics.
 
 from __future__ import annotations
 
+import math
 from datetime import datetime
 
 import pandas as pd
 
-DAYS_IN_YEAR = 365.0
+from ..constants import DAYS_IN_YEAR
 
 
 def calculate_nav_at_time(
@@ -42,18 +43,17 @@ def calculate_nav_at_time(
     if remaining_cashflows.empty:
         return 0.0
 
-    present_value = 0.0
-    for _, row in remaining_cashflows.iterrows():
-        days_diff = (row["Date"] - target_date).days
-        discount_factor = (1 + irr) ** (days_diff / DAYS_IN_YEAR)
-        present_value += row["Cashflow_Amount_Local"] / discount_factor
+    # Vectorized calculation for better performance
+    days_diff = (remaining_cashflows["Date"] - target_date).dt.days
+    discount_factors = (1 + irr) ** (days_diff / DAYS_IN_YEAR)
+    present_value = (remaining_cashflows["Cashflow_Amount_Local"] / discount_factors).sum()
     
-    # Round values very close to zero to exactly zero to handle floating point precision
-    # Using 1e-4 threshold to catch floating point errors in NPV calculations
-    if abs(present_value) < 1e-4:
+    # Use math.isclose() for robust floating-point comparison
+    # abs_tol=1e-6 is appropriate for financial calculations (handles rounding errors)
+    if math.isclose(present_value, 0.0, abs_tol=1e-6):
         return 0.0
     
-    return present_value
+    return float(present_value)
 
 
 def generate_nav_schedule(

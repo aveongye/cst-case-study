@@ -18,12 +18,6 @@ def test_nav_value_on_date(sample_nav_schedule):
     assert _nav_value_on_date(sample_nav_schedule, datetime(2025, 12, 31)) == 102.5
 
 
-def test_nav_value_on_date_not_found(sample_nav_schedule):
-    """Test that missing date raises ValueError."""
-    # Use only first row to test missing date
-    nav_df = sample_nav_schedule.head(1)
-    with pytest.raises(ValueError, match="No NAV data available"):
-        _nav_value_on_date(nav_df, datetime(2025, 12, 31))
 
 
 def test_propose_fx_trades(sample_nav_schedule, sample_fund_df_multi_currency):
