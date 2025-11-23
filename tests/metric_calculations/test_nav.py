@@ -12,36 +12,47 @@ from src.case_study.metric_calculations.nav import (
     generate_nav_schedule,
 )
 
+# Expected values based on sample_fund_df fixture
+EXPECTED_NAV_2025_12_31 = 101.2715460850
+EXPECTED_NAV_FINAL = 100.0
 
-def test_calculate_nav_at_time(sample_fund_df):
-    """Test NAV calculation at time t."""
-    result = calculate_nav_at_time(
-        sample_fund_df, datetime(2025, 9, 30), 0.10
-    )
-    # Should include all cashflows at or after the target date (including negative investment)
-    assert result < 0  # Investment is negative, so NPV should be negative initially
 
-    # No remaining cashflows
-    last_date = sample_fund_df["Date"].max()
-    # At the last date, there should still be cashflows on that date
-    result_last = calculate_nav_at_time(
-        sample_fund_df, last_date, 0.10
-    )
-    assert result_last >= 0  # Final principal repayment should be positive
+def test_calculate_nav_at_time_initial_date(sample_fund_df):
+    """Test NAV calculation at initial date with actual IRR."""
+    from src.case_study.metric_calculations.irr import calculate_currency_irrs
+    
+    gbp_df = sample_fund_df[sample_fund_df["Local_Currency"] == "GBP"]
+    irrs = calculate_currency_irrs(sample_fund_df)
+    result = calculate_nav_at_time(gbp_df, datetime(2025, 9, 30), irrs["GBP"])
+    # NAV(0) should be 0 (IRR makes NPV = 0)
+    assert abs(result) < 1e-6
+
+
+def test_calculate_nav_at_time_final_date(sample_fund_df):
+    """Test NAV calculation at final date with actual IRR."""
+    from src.case_study.metric_calculations.irr import calculate_currency_irrs
+    
+    gbp_df = sample_fund_df[sample_fund_df["Local_Currency"] == "GBP"]
+    irrs = calculate_currency_irrs(sample_fund_df)
+    last_date = gbp_df["Date"].max()
+    result = calculate_nav_at_time(gbp_df, last_date, irrs["GBP"])
+    assert abs(result - EXPECTED_NAV_FINAL) < 1e-6
 
 
 def test_generate_nav_schedule(sample_fund_df):
-    """Test NAV schedule generation."""
-    currency_irrs = {"GBP": 0.10}
+    """Test NAV schedule generation with actual calculated IRRs."""
+    from src.case_study.metric_calculations.irr import calculate_currency_irrs
+    
+    currency_irrs = calculate_currency_irrs(sample_fund_df)
     schedules = generate_nav_schedule(sample_fund_df, currency_irrs)
 
-    assert "GBP" in schedules
-    assert len(schedules["GBP"]) == 3
-    assert "Date" in schedules["GBP"].columns
-    assert "Net_Asset_Value_Local" in schedules["GBP"].columns
+    assert set(schedules.keys()) == {"GBP", "USD", "EUR"}
     
-    # NAV should be calculated as NPV of remaining cashflows at all dates
-    first_row = schedules["GBP"].iloc[0]
-    # First date includes the initial negative investment, so NAV will be negative
-    assert first_row["Net_Asset_Value_Local"] < 0
+    # Check GBP schedule with actual values
+    gbp_schedule = schedules["GBP"]
+    assert len(gbp_schedule) == 3
+    assert list(gbp_schedule.columns) == ["Date", "Net_Asset_Value_Local"]
+    assert abs(gbp_schedule.iloc[0]["Net_Asset_Value_Local"]) < 1e-6
+    assert abs(gbp_schedule.iloc[1]["Net_Asset_Value_Local"] - EXPECTED_NAV_2025_12_31) < 1e-6
+    assert abs(gbp_schedule.iloc[2]["Net_Asset_Value_Local"] - EXPECTED_NAV_FINAL) < 1e-6
 

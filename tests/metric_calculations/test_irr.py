@@ -13,13 +13,20 @@ from src.case_study.metric_calculations.irr import (
     calculate_irr,
 )
 
+# Expected values based on sample_fund_df fixture
+EXPECTED_GBP_IRR = 0.0514069002
+EXPECTED_USD_IRR = 0.0619986651
+EXPECTED_EUR_IRR = 0.0514069002
+EXPECTED_FUND_IRR = 0.0515682272
+
 
 def test_calculate_irr(sample_fund_df):
-    """Test IRR calculation."""
-    cashflows = sample_fund_df["Cashflow_Amount_Local"].tolist()
-    dates = sample_fund_df["Date"].tolist()
+    """Test IRR calculation with known cashflows."""
+    gbp_df = sample_fund_df[sample_fund_df["Local_Currency"] == "GBP"]
+    cashflows = gbp_df["Cashflow_Amount_Local"].tolist()
+    dates = gbp_df["Date"].tolist()
     irr = calculate_irr(cashflows, dates)
-    assert 0.05 < irr < 0.06  # Around 5% return for 6 months
+    assert abs(irr - EXPECTED_GBP_IRR) < 1e-6
 
 
 def test_calculate_irr_errors():
@@ -32,26 +39,18 @@ def test_calculate_irr_errors():
 
 
 def test_calculate_currency_irrs(sample_fund_df):
-    """Test currency IRR calculation."""
+    """Test currency IRR calculation with expected values."""
     irrs = calculate_currency_irrs(sample_fund_df)
-    assert "GBP" in irrs
-    assert 0.0 < irrs["GBP"] < 1.0
-
-
-def test_calculate_currency_irrs_multiple_currencies(sample_fund_df_multi_currency):
-    """Test IRR calculation for multiple currencies."""
-    irrs = calculate_currency_irrs(sample_fund_df_multi_currency)
-    assert "GBP" in irrs
-    assert "USD" in irrs
-    assert 0.0 < irrs["GBP"] < 1.0
-    assert 0.0 < irrs["USD"] < 1.0
+    assert set(irrs.keys()) == {"GBP", "USD", "EUR"}
+    assert abs(irrs["GBP"] - EXPECTED_GBP_IRR) < 1e-6
+    assert abs(irrs["USD"] - EXPECTED_USD_IRR) < 1e-6
+    assert abs(irrs["EUR"] - EXPECTED_EUR_IRR) < 1e-6
 
 
 def test_calculate_fund_irr(sample_fund_df):
-    """Test fund IRR calculation."""
+    """Test fund IRR calculation with expected value."""
     irr = calculate_fund_irr(sample_fund_df)
-    assert isinstance(irr, float)
-    assert 0.0 < irr < 1.0
+    assert abs(irr - EXPECTED_FUND_IRR) < 1e-6
 
 
 
