@@ -168,29 +168,18 @@ The fund holds investments in multiple currencies (GBP, USD) but reports in EUR.
 
 **2. Notional Amount Logic - Post-Transaction Approach:**
 
-The hedge notional is based on **post-transaction NAV at the trade date**, meaning the NAV value immediately after processing any cash flow on that date. This excludes the just-realized cash flow from the ongoing exposure.
+The hedge notional is determined using the **post-transaction NAV at the trade date**. This represents the NAV immediately after accounting for any cash flow occurring on that date, effectively excluding the just-realized cash flow from the fund's ongoing exposure.
 
-- **Hedge notional = Post-transaction NAV at trade date**
-- Post-transaction NAV = Pre-transaction NAV - Cashflow on trade date
-- Trades are entered post-cash flow, with delivery 3 months later
-- This approach aligns with methodologies like Bloomberg's Global Equity FX Hedging, where notionals are based on adjusted market values "after implementation of all corporate actions"
+- Hedge Notional = Post-transaction NAV at the trade date
+- Post-transaction NAV = Pre-transaction NAV - Cash flow on the trade date
+- Trades are executed post-cash flow on the trade date, with settlement (delivery) scheduled 3 months later.
+- This approach aligns with methodologies such as [Bloomberg's Global Equity FX Hedging](https://assets.bbhub.io/professional/sites/10/Bloomberg-Global-Equity-Index-FX-Hedging-Methodology.pdf), where notionals are based on adjusted market values "after implementation of all corporate actions".
+- Key Assumption: Payouts (interest and principal) are not retained in the foreign currency. Instead, they're immediately converted to EUR, distributed to investors, or hedged separately upon receipt. As a result, they are not considered part of the fund's ongoing NAV exposure after settlement.
 
 **Examples:**
 
 - **Initial trade (2025-09-30)**: Post-transaction NAV = £100,000,000 for GBP (after the -£100M investment outflow; this is the PV of all future cash flows)
 - **Subsequent trades (e.g., 2025-12-31)**: Post-transaction NAV = £99,919,859 for GBP (after receiving the £2.5M interest; this is the PV of the remaining 18 interest payments + principal)
-
-**Key Assumptions:**
-
-1. **Payouts (Interest) Are Not Retained and Handled Separately**: Assumes interest is immediately converted to EUR, distributed to investors, or hedged independently. Hence, it is not held as part of the fund's ongoing GBP exposure. FX risk on interest is minimal/short-term.
-
-2. **FX Risk Materializes Only on Ongoing Asset Value**: Assumes the primary risk is on the post-cash flow NAV (PV of remaining flows), not the full pre-value including imminent interest.
-
-3. **Accretion Drifts Are Acceptable and Self-Correcting**: Assumes quarterly accretion (~2.4% growth at IRR) causes only minor under-hedging near rolls (e.g., ratio ~97.6% just before next payment), which is tolerable as rolls reset the notional.
-
-4. **Timing and Sequencing Minimize Gaps**: Assumes trades are entered post-cash flow on the same day, using fixing rates to avoid intraday volatility mismatches.
-
-5. **100% Ratio Targets Effective Exposure**: Assumes the ratio is measured against the post-value (ongoing asset), accepting small gaps on separated payouts as outside core NAV exposure.
 
 **Why Not Other Alternatives?**
 
