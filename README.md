@@ -168,13 +168,13 @@ The fund holds investments in multiple currencies (GBP, USD) but reports in EUR.
 
 **2. Notional Amount Logic - Post-Transaction Approach:**
 
-The hedge notional is determined using the **post-transaction NAV at the trade date**. This represents the NAV immediately after accounting for any cash flow occurring on that date, effectively excluding the just-realized cash flow from the fund's ongoing exposure.
+The hedge notional is calculated using the **post-transaction NAV** on each trade date. This represents the NAV immediately after accounting for any cash flow occurring on that date, effectively excluding the just-realized cash flow from the fund's ongoing exposure.
 
 - Hedge Notional = Post-transaction NAV at the trade date
 - Post-transaction NAV = Pre-transaction NAV - Cash flow on the trade date
 - Trades are executed post-cash flow on the trade date, with settlement (delivery) scheduled 3 months later.
-- This approach aligns with methodologies such as [Bloomberg's Global Equity FX Hedging](https://assets.bbhub.io/professional/sites/10/Bloomberg-Global-Equity-Index-FX-Hedging-Methodology.pdf), where notionals are based on adjusted market values "after implementation of all corporate actions".
-- Key Assumption: Payouts (interest and principal) are not retained in the foreign currency. Instead, they're immediately converted to EUR, distributed to investors, or hedged separately upon receipt. As a result, they are not considered part of the fund's ongoing NAV exposure after settlement.
+- This approach aligns with methodologies such as [Bloomberg's Global Equity FX Hedging](https://assets.bbhub.io/professional/sites/10/Bloomberg-Global-Equity-Index-FX-Hedging-Methodology.pdf), where notionals are based on adjusted market values "after implementation of all corporate actions" (i.e. cashflow on the day).
+- Key Assumption: The cashflow received on the trade date, whether interest or principal, is not retained in the foreign currency. It is assumed to be immediately converted to EUR, distributed to investors, or hedged separately upon receipt. Because this cashflow is no longer held in the foreign currency after settlement, it is not part of the fund’s ongoing NAV exposure and should be excluded when determining hedge notional.
 
 **Examples:**
 
@@ -183,11 +183,9 @@ The hedge notional is determined using the **post-transaction NAV at the trade d
 
 **Why Not Other Alternatives?**
 
-- **Mixed Approach (Post for Initial, Pre for Subsequent)**: Inconsistent—treats initial differently from quarters, complicating audits. Assumes interest remains at risk (over-hedges if paid out/converted immediately).
+- **Mixed Approach (Post for Initial, Pre for Subsequent)**: Inconsistent; treats initial differently from quarters, complicating audits. Assumes interest remains at risk (over-hedges if paid out/converted immediately).
 
 - **All Pre-Transaction NAV**: Skips hedging the first 3 months (unprotected exposure), creating major gaps. Assumes no risk pre-cash flow, but exposure starts post-outflow.
-
-- **Projecting Future NAV**: Introduces speculation on accretion, over-hedging initially. Avoids forecast errors that amplify P&L volatility.
 
 **3. Rolling Mechanism:**
 
