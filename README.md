@@ -166,26 +166,40 @@ The fund holds investments in multiple currencies (GBP, USD) but reports in EUR.
 - **Direction**: Always `Sell` foreign currency / `Buy` base currency (EUR)
 - **Purpose**: Lock in EUR value against foreign currency depreciation
 
-**2. Notional Amount Logic - Post-Transaction Approach:**
+**2. Notional Amount Logic**
 
-The hedge notional is calculated using the **post-transaction NAV** on each trade date. This represents the NAV immediately after accounting for any cash flow occurring on that date, effectively excluding the just-realized cash flow from the fund's ongoing exposure.
+The hedge notional is calculated by taking the **NAV at the delivery date** and discounting it back to the trade date using the currency IRR. This expresses the NAV exposure at delivery "in terms of" the trade date, accounting for the time value of money.
 
-- Hedge Notional = Post-transaction NAV at the trade date
-- Post-transaction NAV = Pre-transaction NAV - Cash flow on the trade date
-- Trades are executed post-cash flow on the trade date, with settlement (delivery) scheduled 3 months later.
-- This approach aligns with methodologies such as [Bloomberg's Global Equity FX Hedging](https://assets.bbhub.io/professional/sites/10/Bloomberg-Global-Equity-Index-FX-Hedging-Methodology.pdf), where notionals are based on adjusted market values "after implementation of all corporate actions" (i.e. cashflow on the day).
-- Key Assumption: The cashflow received on the trade date, whether interest or principal, is not retained in the foreign currency. It is assumed to be immediately converted to EUR, distributed to investors, or hedged separately upon receipt. Because this cashflow is no longer held in the foreign currency after settlement, it is not part of the fund’s ongoing NAV exposure and should be excluded when determining hedge notional.
+**Key Concept:**
+
+- NAV at any date is already a present value (PV) of all remaining cashflows as of that date
+- NAV(delivery_date) represents the PV of future cashflows as of the delivery date
+- By discounting NAV(delivery_date) back to the trade date, we get the PV of those same cashflows as of the trade date (i.e. The notional amount is conceptually similar to a "post-transaction NAV")
+- This ensures the hedge notional reflects the economic exposure at the time the forward contract is entered, after settlement of all cashflow(s) on the trade date.
+
+**Formula:**
+
+- Hedge Notional = NAV(delivery_date) / (1 + r)^(days/365)
+- Where:
+  - NAV(delivery_date) is the NAV at the delivery date (already a PV)
+  - r is the currency-specific IRR
+  - days is the number of days from trade_date to delivery_date
 
 **Examples:**
 
-- **Initial trade (2025-09-30)**: Post-transaction NAV = £100,000,000 for GBP (after the -£100M investment outflow; this is the PV of all future cash flows)
-- **Subsequent trades (e.g., 2025-12-31)**: Post-transaction NAV = £99,919,859 for GBP (after receiving the £2.5M interest; this is the PV of the remaining 18 interest payments + principal)
+- **Initial trade (2025-09-30, delivery 2025-12-31)**:
 
-**Why Not Other Alternatives?**
+  - NAV at delivery date (2025-12-31) = £102,419,859.44 (PV of cashflows as of 2025-12-31)
+  - Days to delivery = 92 days
+  - GBP IRR = 9.951%
+  - Notional = £102,419,859.44 / (1.09951)^(92/365) = £100,000,000.00
+  - _Note: This equals the initial investment because discounting NAV(2025-12-31) back to 2025-09-30 gives the PV of future cashflows at 2025-09-30, which equals the initial investment amount_
 
-- **Mixed Approach (Post for Initial, Pre for Subsequent)**: Inconsistent; treats initial differently from quarters, complicating audits. Assumes interest remains at risk (over-hedges if paid out/converted immediately).
-
-- **All Pre-Transaction NAV**: Skips hedging the first 3 months (unprotected exposure), creating major gaps. Assumes no risk pre-cash flow, but exposure starts post-outflow.
+- **Subsequent trade (2025-12-31, delivery 2026-03-31)**:
+  - NAV at delivery date (2026-03-31) = £102,284,599.01 (PV of cashflows as of 2026-03-31)
+  - Days to delivery = 90 days
+  - Notional = £102,284,599.01 / (1.09951)^(90/365) = £99,919,859.44
+  - _This represents the PV (as of 2025-12-31) of the NAV exposure that will exist at 2026-03-31_
 
 **3. Rolling Mechanism:**
 
@@ -196,31 +210,30 @@ The hedge notional is calculated using the **post-transaction NAV** on each trad
 
 **4. Hedge Effectiveness:**
 
-- **100% coverage**: Hedge notional = NAV exposure at delivery
-- **Perfect offset**: Forward P&L exactly offsets FX impact on NAV
-- **Mathematical proof**: If GBP weakens 10%, asset loses 10% but forward gains 10%, net = 0. And vice versa.
+- **Present value coverage**: Hedge notional = NAV(delivery_date) discounted to trade_date
+- **Time value adjustment**: Accounts for the time value of money by discounting the delivery date NAV back to the trade date using the currency IRR
+- **Mathematical consistency**: Since NAV is already a present value calculation, discounting it back maintains consistency with the NAV methodology
+- **Hedge alignment**: The notional reflects the economic exposure (in present value terms) at the time the forward contract is entered
 
 #### Example Trade Lifecycle
 
 ```
-2025-09-30: Enter Forward 1 (Post-Transaction)
+2025-09-30: Enter Forward 1
   - Trade Date: 2025-09-30
   - Delivery Date: 2025-12-31
-  - Pre-transaction NAV: £0.00
-  - Cashflow: -£100,000,000 (investment)
-  - Post-transaction NAV: £100,000,000
-  - Notional: £100,000,000 GBP (post-transaction NAV at trade date)
+  - NAV at delivery date (2025-12-31): £102,419,859.44
+  - Days to delivery: 92 days
+  - GBP IRR: 9.951%
+  - Notional: £102,419,859.44 / (1.09951)^(92/365) ≈ £100,000,000.00 GBP
 
-2025-12-31: Roll Forward (Post-Transaction)
-  - Settle Forward 1 (deliver £100M GBP)
-  - Receive £2.5M interest on 2025-12-31
+2025-12-31: Roll Forward
+  - Settle Forward 1 (deliver £100,000,000.00 GBP)
   - Enter Forward 2
   - Trade Date: 2025-12-31
   - Delivery Date: 2026-03-31
-  - Pre-transaction NAV: £102,419,859.44
-  - Cashflow: +£2,500,000 (interest)
-  - Post-transaction NAV: £99,919,859.44
-  - Notional: £99,919,859.44 GBP (post-transaction NAV at trade date)
+  - NAV at delivery date (2026-03-31): £102,284,599.01
+  - Days to delivery: 90 days
+  - Notional: £102,284,599.01 / (1.09951)^(90/365) ≈ £99,919,859.44 GBP
 
 ...continues quarterly until final cashflow...
 ```

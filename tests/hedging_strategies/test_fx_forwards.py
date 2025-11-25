@@ -36,7 +36,7 @@ def test_propose_fx_trades(sample_fund_df):
     """Test FX trade proposal generation with actual NAV schedules."""
     currency_irrs = calculate_currency_irrs(sample_fund_df)
     nav_schedules = generate_nav_schedule(sample_fund_df, currency_irrs)
-    trades = propose_fx_trades(nav_schedules, sample_fund_df)
+    trades = propose_fx_trades(nav_schedules, sample_fund_df, currency_irrs)
 
     assert len(trades) == 4  # 2 GBP trades + 2 USD trades
     
@@ -63,7 +63,7 @@ def test_propose_fx_trades_auto_excludes_base_currency(sample_fund_df):
     """Test that base currency is automatically excluded from hedging."""
     currency_irrs = calculate_currency_irrs(sample_fund_df)
     nav_schedules = generate_nav_schedule(sample_fund_df, currency_irrs)
-    trades = propose_fx_trades(nav_schedules, sample_fund_df)
+    trades = propose_fx_trades(nav_schedules, sample_fund_df, currency_irrs)
     
     # Should only hedge GBP and USD, not EUR (base currency)
     assert len(trades) == 4

@@ -4,9 +4,12 @@ FX hedging utilities
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from datetime import datetime
 import pandas as pd
+
+from ..constants import DAYS_IN_YEAR
 
 
 @dataclass
@@ -27,17 +30,10 @@ def _nav_value_on_date(nav_df: pd.DataFrame, current_date: datetime) -> float:
     return float(row["Net_Asset_Value_Local"].iloc[0])
 
 
-def _get_cashflow_on_date(fund_df: pd.DataFrame, currency: str, date: datetime) -> float:
-    """
-    Get the cashflow amount on a specific date for a given currency.
-    """
-    curr_df = fund_df[fund_df["Local_Currency"] == currency]
-    date_cashflows = curr_df[curr_df["Date"] == date]
-    return float(date_cashflows["Cashflow_Amount_Local"].sum())
-
 def propose_fx_trades(
     nav_schedules: dict[str, pd.DataFrame],
     fund_df: pd.DataFrame,
+    currency_irrs: dict[str, float],
 ) -> pd.DataFrame:
     """
     Propose FX forward hedges aligned with NAV schedule dates.
@@ -45,6 +41,7 @@ def propose_fx_trades(
     Args:
         nav_schedules: Dictionary mapping currency codes to NAV schedule DataFrames
         fund_df: DataFrame containing fund cashflow data (must be non-empty and contain Base_Currency)
+        currency_irrs: Dictionary mapping currency codes to their IRRs
         
     Returns:
         DataFrame containing proposed FX forward trades
@@ -78,16 +75,22 @@ def propose_fx_trades(
                 # so no forward hedge is needed beyond this date
                 continue
             
-            # Hedge based on POST-TRANSACTION NAV at trade date
-            # This represents the exposure after cashflows on the trade date are received/paid
-            # Post-transaction NAV = Pre-transaction NAV - Cashflow on trade date
-            pre_transaction_nav = _nav_value_on_date(nav_df, trade_date)
-            cashflow_on_trade_date = _get_cashflow_on_date(fund_df, currency, trade_date)
-            notional_amount = pre_transaction_nav - cashflow_on_trade_date
+            # Calculate notional as the NAV at delivery date expressed in terms of the trade date
+            # The NAV at delivery_date is a present value (PV) at that date
+            # We discount it back to trade_date to express it "in terms of" the trade date
+            # Notional = NAV(delivery_date) / (1 + r)^(days/365)
+            # where r is the currency IRR and days is from trade_date to delivery_date
+            # Example: NAV at 2025-12-31 = £102,419,859.44, discounted to 2025-09-30 = £100,000,000.00
+            nav_at_delivery_date = _nav_value_on_date(nav_df, delivery_date)
             
-            # Skip trades with zero or negative exposure
-            if notional_amount <= 0:
+            # Skip trades with zero or negative NAV at delivery date
+            if nav_at_delivery_date <= 0 or math.isclose(nav_at_delivery_date, 0.0, abs_tol=1e-6):
                 continue
+            
+            irr = currency_irrs[currency]
+            days_to_delivery = (delivery_date - trade_date).days
+            discount_factor = (1 + irr) ** (days_to_delivery / DAYS_IN_YEAR)
+            notional_amount = nav_at_delivery_date / discount_factor
 
             trades.append(
                 ForwardTrade(
