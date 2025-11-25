@@ -166,6 +166,10 @@ The fund holds investments in multiple currencies (GBP, USD) but reports in EUR.
 - **Direction**: Always `Sell` foreign currency / `Buy` base currency (EUR)
 - **Purpose**: Lock in EUR value against foreign currency depreciation
 
+**Key Assumption:**
+
+- **Cashflows are hedged separately**: Individual cashflows (such as interest payments and principal repayments) are assumed to be hedged separately using spot transactions or same-day forwards at the time they are received/paid. This means the NAV-based forward hedge covers the remaining exposure (the present value of future cashflows), not the individual cashflows themselves.
+
 **2. Notional Amount Logic**
 
 The hedge notional is calculated by taking the **NAV at the delivery date** and discounting it back to the trade date using the currency IRR. This expresses the NAV exposure at delivery "in terms of" the trade date, accounting for the time value of money.
