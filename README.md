@@ -174,8 +174,8 @@ The hedge notional is calculated by taking the **NAV at the delivery date** and 
 
 - NAV at any date is already a present value (PV) of all remaining cashflows as of that date
 - NAV(delivery_date) represents the PV of future cashflows as of the delivery date
-- By discounting NAV(delivery_date) back to the trade date, we get the PV of those same cashflows as of the trade date (i.e. The notional amount is conceptually similar to a "post-transaction NAV")
-- This ensures the hedge notional reflects the economic exposure at the time the forward contract is entered, after settlement of all cashflow(s) on the trade date.
+- By discounting NAV(delivery_date) back to the trade date, we get the PV of those same cashflows as of the trade date, after settlement of all cashflow(s) on the trade date (i.e. The notional amount is conceptually similar to a "post-transaction NAV")
+- This ensures the hedge notional reflects the economic exposure at the time the forward contract is entered, which is assumed to be EOD
 
 **Formula:**
 
@@ -193,13 +193,13 @@ The hedge notional is calculated by taking the **NAV at the delivery date** and 
   - Days to delivery = 92 days
   - GBP IRR = 9.951%
   - Notional = £102,419,859.44 / (1.09951)^(92/365) = £100,000,000.00
-  - _Note: This equals the initial investment because discounting NAV(2025-12-31) back to 2025-09-30 gives the PV of future cashflows at 2025-09-30, which equals the initial investment amount_
+  - _Note: This equals the initial investment because discounting NAV(2025-12-31) back to 2025-09-30 gives the PV of future cashflows at 2025-09-30 after cashflow settlement (i.e. -£100M), which equals the initial investment amount. On 2025-09-30, the NAV exposure starts immediately after post investment outflow._
 
 - **Subsequent trade (2025-12-31, delivery 2026-03-31)**:
   - NAV at delivery date (2026-03-31) = £102,284,599.01 (PV of cashflows as of 2026-03-31)
   - Days to delivery = 90 days
   - Notional = £102,284,599.01 / (1.09951)^(90/365) = £99,919,859.44
-  - _This represents the PV (as of 2025-12-31) of the NAV exposure that will exist at 2026-03-31_
+  - _This represents the PV (as of 2025-12-31) of the NAV exposure that will exist at 2026-03-31._
 
 **3. Rolling Mechanism:**
 
